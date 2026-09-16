@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MealForward - 관리자</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🍽 MealForward</div>
+  <nav>
+    <a href="/index.html">홈</a>
+    <span id="authArea"></span>
+  </nav>
+</header>
+<main>
+  <h1>전사 이월 정산 & 세무 가드레일 관리</h1>
+  <p class="subtitle" id="profileLine">-</p>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="label">총 이월 금액</div><div class="value" id="kpiTotal">-</div></div>
+    <div class="kpi-card"><div class="label">AI 차단 건수</div><div class="value" id="kpiBlocked">-</div></div>
+    <div class="kpi-card"><div class="label">절감 세무 리스크 금액</div><div class="value" id="kpiSaved">-</div></div>
+  </div>
+
+  <div class="card">
+    <h2>부서별/직원별 이월 내역</h2>
+    <table>
+      <thead><tr><th>이름</th><th>부서</th><th>이월 포인트</th><th>상태</th></tr></thead>
+      <tbody id="settlementRows"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>가드레일 정책</h2>
+    <p style="font-size:13px;color:var(--muted);margin-top:0;">아래 정책은 <b>식대 이월 포인트</b> 결제에만 적용됩니다. 일반 복지 포인트로는 상품권 등 현금성 자산도 구매할 수 있습니다.</p>
+    <div class="switch-row"><span>이월 포인트의 상품권 결제 차단</span><b>ON (고정)</b></div>
+    <div class="switch-row"><span>이월 포인트의 현금성 자산 차단</span><b>ON (고정)</b></div>
+    <div class="switch-row"><span>차단 민감도 (risk threshold)</span><span id="riskThreshold">-</span></div>
+  </div>
+
+  <div class="card">
+    <h2>연간 정산 & 배치</h2>
+    <p style="font-size:14px;color:var(--muted);margin-top:0;">매년 9월 30일 마감 후 최종 승인 및 ERP/회계 연동을 진행합니다.</p>
+    <button class="btn" id="finalizeBtn">9월 말 정산 최종 승인</button>
+    <button class="btn secondary" id="expireBtn">이월 포인트 소멸 배치 실행</button>
+    <div id="adminResult"></div>
+  </div>
+
+  <div class="card">
+    <h2>복지 상품 관리</h2>
+    <p style="font-size:13px;color:var(--muted);margin-top:0;">포인트 상점에 노출되는 상품을 등록/수정/삭제합니다. 관리자만 가능한 기능입니다.</p>
+    <table>
+      <thead><tr><th>상품명</th><th>카테고리</th><th>가격</th><th>현금성 자산</th><th></th></tr></thead>
+      <tbody id="productRows"></tbody>
+    </table>
+
+    <h2 style="margin-top:20px;">상품 추가</h2>
+    <div class="form-field">
+      <label>상품명</label>
+      <input type="text" id="newProductName" />
+    </div>
+    <div class="form-field">
+      <label>카테고리</label>
+      <select id="newProductCategory">
+        <option value="BOOK">도서</option>
+        <option value="LEARNING">강의/자기계발</option>
+        <option value="FITNESS">운동</option>
+        <option value="CAFE">커피쿠폰</option>
+        <option value="GIFT_CARD">상품권</option>
+        <option value="__custom__">직접 입력...</option>
+      </select>
+    </div>
+    <div class="form-field" id="customCategoryField" hidden>
+      <label>카테고리 직접 입력</label>
+      <input type="text" id="newProductCategoryCustom" placeholder="예: 반려동물" />
+    </div>
+    <div class="form-field">
+      <label>가격 (원)</label>
+      <input type="number" id="newProductPrice" min="0" />
+    </div>
+    <div class="form-field">
+      <label><input type="checkbox" id="newProductCashLike" /> 현금성 자산 (이월 포인트 결제 불가)</label>
+    </div>
+    <button class="btn" id="addProductBtn">상품 추가</button>
+    <div id="productResult"></div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="editModalOverlay" hidden>
+  <div class="modal-box">
+    <button class="modal-close" id="editModalClose">✕</button>
+    <div class="modal-title" style="margin-bottom:16px;">상품 수정</div>
+
+    <div class="form-field">
+      <label>상품명</label>
+      <input type="text" id="editName" />
+    </div>
+    <div class="form-field">
+      <label>카테고리</label>
+      <select id="editCategory">
+        <option value="BOOK">도서</option>
+        <option value="LEARNING">강의/자기계발</option>
+        <option value="FITNESS">운동</option>
+        <option value="CAFE">커피쿠폰</option>
+        <option value="GIFT_CARD">상품권</option>
+        <option value="__custom__">직접 입력...</option>
+      </select>
+    </div>
+    <div class="form-field" id="editCustomCategoryField" hidden>
+      <label>카테고리 직접 입력</label>
+      <input type="text" id="editCategoryCustom" />
+    </div>
+    <div class="form-field">
+      <label>가격 (원)</label>
+      <input type="number" id="editPrice" min="0" />
+    </div>
+    <div class="form-field">
+      <label><input type="checkbox" id="editCashLike" /> 현금성 자산 (이월 포인트 결제 불가)</label>
+    </div>
+    <button class="btn" id="saveProductBtn" style="width:100%;">저장</button>
+    <div id="editResult"></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const session = requireAdminSession();
+function won(n) { return `${Number(n).toLocaleString()}원`; }
+
+if (session) {
+  document.getElementById('authArea').innerHTML =
+    `<a href="/admin.html" class="active">${session.name}님</a> <a href="#" id="logoutLink">로그아웃</a>`;
+  document.getElementById('logoutLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    clearSession();
+    window.location.href = '/login.html';
+  });
+  document.getElementById('profileLine').textContent = `${session.name} 관리자 · 2026 회계연도`;
+}
+
+const CATEGORY_LABEL = { BOOK: '도서', LEARNING: '강의/자기계발', FITNESS: '운동', CAFE: '커피쿠폰', GIFT_CARD: '백화점상품권' };
+const STANDARD_CATEGORIES = new Set(['BOOK', 'LEARNING', 'FITNESS', 'CAFE', 'GIFT_CARD']);
+let products = [];
+
+async function loadProducts() {
+  const { data } = await api('/admin/products');
+  products = data;
+  document.getElementById('productRows').innerHTML = data.map((p) => `
+    <tr>
+      <td>${p.name}</td>
+      <td>${CATEGORY_LABEL[p.category] || p.category}</td>
+      <td>${won(p.price)}</td>
+      <td>${p.isCashLike ? 'O' : '-'}</td>
+      <td>
+        <button class="btn secondary" style="padding:6px 12px;font-size:12px;" onclick="openEditModal(${p.id})">수정</button>
+        <button class="btn secondary" style="padding:6px 12px;font-size:12px;" onclick="deleteProduct(${p.id})">삭제</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+let editingProductId = null;
+
+function openEditModal(id) {
+  const p = products.find((item) => item.id === id);
+  if (!p) return;
+  editingProductId = id;
+
+  document.getElementById('editName').value = p.name;
+  document.getElementById('editPrice').value = p.price;
+  document.getElementById('editCashLike').checked = p.isCashLike;
+  document.getElementById('editResult').innerHTML = '';
+
+  const categorySelect = document.getElementById('editCategory');
+  if (STANDARD_CATEGORIES.has(p.category)) {
+    categorySelect.value = p.category;
+    document.getElementById('editCustomCategoryField').hidden = true;
+  } else {
+    categorySelect.value = '__custom__';
+    document.getElementById('editCategoryCustom').value = p.category;
+    document.getElementById('editCustomCategoryField').hidden = false;
+  }
+
+  document.getElementById('editModalOverlay').hidden = false;
+}
+
+function closeEditModal() {
+  document.getElementById('editModalOverlay').hidden = true;
+  editingProductId = null;
+}
+
+document.getElementById('editModalClose').addEventListener('click', closeEditModal);
+document.getElementById('editModalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'editModalOverlay') closeEditModal();
+});
+
+document.getElementById('editCategory').addEventListener('change', (e) => {
+  document.getElementById('editCustomCategoryField').hidden = e.target.value !== '__custom__';
+});
+
+document.getElementById('saveProductBtn').addEventListener('click', async () => {
+  const name = document.getElementById('editName').value.trim();
+  const categorySelect = document.getElementById('editCategory').value;
+  const category = categorySelect === '__custom__'
+    ? document.getElementById('editCategoryCustom').value.trim().toUpperCase()
+    : categorySelect;
+  const price = Number(document.getElementById('editPrice').value);
+  const isCashLike = document.getElementById('editCashLike').checked;
+  const resultEl = document.getElementById('editResult');
+
+  if (!name || !category || !(price > 0)) {
+    resultEl.innerHTML = `<div class="alert error">⛔ 상품명, 카테고리, 가격을 확인해주세요.</div>`;
+    return;
+  }
+
+  const { ok, data } = await api(`/admin/products/${editingProductId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, category, price, isCashLike }),
+  });
+
+  if (ok) {
+    document.getElementById('productResult').innerHTML = `<div class="alert success">✅ "${data.name}" 상품이 수정되었습니다.</div>`;
+    closeEditModal();
+    loadProducts();
+  } else {
+    resultEl.innerHTML = `<div class="alert error">⛔ ${data.message || '수정에 실패했습니다.'}</div>`;
+  }
+});
+
+async function deleteProduct(id) {
+  const { ok, data } = await api(`/admin/products/${id}`, { method: 'DELETE' });
+  const resultEl = document.getElementById('productResult');
+  if (ok) {
+    resultEl.innerHTML = `<div class="alert success">✅ 상품이 삭제되었습니다.</div>`;
+    loadProducts();
+  } else {
+    resultEl.innerHTML = `<div class="alert error">⛔ ${data.message || '삭제에 실패했습니다.'}</div>`;
+  }
+}
+
+document.getElementById('newProductCategory').addEventListener('change', (e) => {
+  document.getElementById('customCategoryField').hidden = e.target.value !== '__custom__';
+});
+
+document.getElementById('addProductBtn').addEventListener('click', async () => {
+  const name = document.getElementById('newProductName').value.trim();
+  const categorySelect = document.getElementById('newProductCategory').value;
+  const category = categorySelect === '__custom__'
+    ? document.getElementById('newProductCategoryCustom').value.trim().toUpperCase()
+    : categorySelect;
+  const price = Number(document.getElementById('newProductPrice').value);
+  const isCashLike = document.getElementById('newProductCashLike').checked;
+  const resultEl = document.getElementById('productResult');
+
+  if (categorySelect === '__custom__' && !category) {
+    resultEl.innerHTML = `<div class="alert error">⛔ 카테고리를 입력해주세요.</div>`;
+    return;
+  }
+
+  if (!name || !(price > 0)) {
+    resultEl.innerHTML = `<div class="alert error">⛔ 상품명과 가격을 확인해주세요.</div>`;
+    return;
+  }
+
+  const { ok, data } = await api('/admin/products', {
+    method: 'POST',
+    body: JSON.stringify({ name, category, price, isCashLike }),
+  });
+
+  if (ok) {
+    resultEl.innerHTML = `<div class="alert success">✅ "${data.name}" 상품이 추가되었습니다.</div>`;
+    document.getElementById('newProductName').value = '';
+    document.getElementById('newProductPrice').value = '';
+    document.getElementById('newProductCashLike').checked = false;
+    document.getElementById('newProductCategoryCustom').value = '';
+    document.getElementById('customCategoryField').hidden = true;
+    document.getElementById('newProductCategory').value = 'BOOK';
+    loadProducts();
+  } else {
+    resultEl.innerHTML = `<div class="alert error">⛔ ${data.message || '추가에 실패했습니다.'}</div>`;
+  }
+});
+
+async function loadSummary() {
+  const { data } = await api('/admin/settlements/summary');
+  document.getElementById('kpiTotal').textContent = won(data.totalRolledOverAmount);
+  document.getElementById('kpiBlocked').textContent = `${data.blockedCountByAI}건`;
+  document.getElementById('kpiSaved').textContent = won(data.savedTaxRiskCost);
+}
+
+async function loadList() {
+  const { data } = await api('/admin/settlements/list');
+  document.getElementById('settlementRows').innerHTML = data.map((r) => `
+    <tr>
+      <td>${r.name}</td>
+      <td>${r.department}</td>
+      <td>${won(r.rolledAmount)}</td>
+      <td>${r.status}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadPolicy() {
+  const { data } = await api('/admin/guardrail-policy');
+  document.getElementById('riskThreshold').textContent = data.riskThreshold;
+}
+
+document.getElementById('finalizeBtn').addEventListener('click', async () => {
+  const { data } = await api('/admin/settlements/finalize', {
+    method: 'POST',
+    body: JSON.stringify({ fiscalYear: '2026' }),
+  });
+  document.getElementById('adminResult').innerHTML =
+    `<div class="alert success">✅ ${data.fiscalYear}년 정산이 승인되었습니다. ERP 연동 상태: ${data.erpSyncStatus}</div>`;
+});
+
+document.getElementById('expireBtn').addEventListener('click', async () => {
+  const { data } = await api('/batch/expire-ledgers', { method: 'POST' });
+  document.getElementById('adminResult').innerHTML =
+    `<div class="alert">🗑 ${data.expiredCount}건 (${won(data.expiredAmount)}) 소멸 처리되었습니다.</div>`;
+  loadSummary();
+  loadList();
+});
+
+if (session) {
+  loadSummary();
+  loadList();
+  loadPolicy();
+  loadProducts();
+}
+</script>
+</body>
+</html>

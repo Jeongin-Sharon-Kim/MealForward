@@ -1,0 +1,119 @@
+@startuml
+enum PointType {
+  GENERAL
+  FLEXI_MEAL
+}
+
+enum LedgerStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum RiskLevel {
+  SAFE
+  SUSPICIOUS
+  BLOCKED
+}
+
+entity "Companies (고객사)" as company {
+  * id : BIGINT <<PK>>
+  --
+  name : VARCHAR(100)
+  biz_no : VARCHAR(20)
+  fiscal_year_end_month : INT DEFAULT 9
+}
+
+entity "Users (임직원)" as user {
+  * id : BIGINT <<PK>>
+  --
+  company_id : BIGINT <<FK>>
+  employee_no : VARCHAR(50)
+  name : VARCHAR(100)
+  department : VARCHAR(100)
+  email : VARCHAR(100) <<UNIQUE>>
+  password_hash : TEXT
+  created_at : TIMESTAMP
+}
+
+entity "Admins (관리자)" as admin {
+  * id : BIGINT <<PK>>
+  --
+  company_id : BIGINT <<FK>>
+  name : VARCHAR(100)
+  email : VARCHAR(100) <<UNIQUE>>
+  password_hash : TEXT
+  created_at : TIMESTAMP
+}
+
+entity "MealBalances (당월 식대 잔액)" as meal {
+  * id : BIGINT <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  year_month : VARCHAR(6)
+  remaining_amount : DECIMAL(10,2)
+  is_rolled_over : BOOLEAN DEFAULT FALSE
+  created_at : TIMESTAMP
+}
+
+entity "PointLedgers (포인트 원장)" as ledger {
+  * id : BIGINT <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  point_type : PointType
+  amount : DECIMAL(10,2)
+  status : LedgerStatus
+  expired_at : TIMESTAMP
+  created_at : TIMESTAMP
+}
+
+entity "PaymentTransactions (결제 트랜잭션)" as payment {
+  * id : BIGINT <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  item_name : VARCHAR(255)
+  mcc_code : VARCHAR(10)
+  general_amount : DECIMAL(10,2)
+  flexi_amount : DECIMAL(10,2)
+  total_amount : DECIMAL(10,2)
+  approval_status : VARCHAR(20)
+  redemption_status : VARCHAR(20)
+  voucher_code : VARCHAR(50)
+  created_at : TIMESTAMP
+}
+
+entity "GuardrailLogs (AI 세무 검증 로그)" as guardrail {
+  * id : BIGINT <<PK>>
+  --
+  payment_id : BIGINT <<FK>>
+  risk_score : FLOAT
+  is_blocked : BOOLEAN
+  block_reason : TEXT
+  source : VARCHAR(50)
+  created_at : TIMESTAMP
+}
+
+entity "Products (상품)" as product {
+  * id : BIGINT <<PK>>
+  --
+  name : VARCHAR(255)
+  category : VARCHAR(50)
+  price : DECIMAL(10,2)
+  is_cash_like : BOOLEAN DEFAULT FALSE
+}
+
+entity "GuardrailPolicy (가드레일 정책)" as policy {
+  * id : BIGINT <<PK>>
+  --
+  block_gift_cards : BOOLEAN DEFAULT TRUE
+  block_cash_equivalents : BOOLEAN DEFAULT TRUE
+  risk_threshold : FLOAT DEFAULT 0.7
+}
+
+company ||--o{ user : "소속"
+company ||--o{ admin : "소속"
+user ||--o{ meal : "당월 잔액 보유"
+user ||--o{ ledger : "포인트 장부 보유 (GENERAL/FLEXI_MEAL)"
+user ||--o{ payment : "결제 (일반+이월 분할 가능)"
+payment ||--o| guardrail : "이월 포인트 결제분만 LLM 가드레일 검증"
+@enduml

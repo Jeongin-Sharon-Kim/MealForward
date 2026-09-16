@@ -1,0 +1,103 @@
+Enum point_type_enum {
+  GENERAL
+  FLEXI_MEAL
+}
+
+Enum ledger_status_enum {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+Table companies {
+  id bigint [pk, increment]
+  name varchar(100)
+  biz_no varchar(20)
+  fiscal_year_end_month int [default: 9]
+}
+
+Table users {
+  id bigint [pk, increment]
+  company_id bigint [not null]
+  employee_no varchar(50)
+  name varchar(100)
+  department varchar(100)
+  email varchar(100) [unique]
+  password_hash text
+  created_at timestamp
+}
+
+Table admins {
+  id bigint [pk, increment]
+  company_id bigint [not null]
+  name varchar(100)
+  email varchar(100) [unique]
+  password_hash text
+  created_at timestamp
+}
+
+Table meal_balances {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  year_month varchar(6)
+  remaining_amount decimal(10,2)
+  is_rolled_over boolean [default: false]
+  created_at timestamp
+}
+
+Table point_ledgers {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  point_type point_type_enum [not null]
+  amount decimal(10,2)
+  status ledger_status_enum [default: 'ACTIVE']
+  expired_at timestamp [note: '매년 9/30 마감 (FLEXI_MEAL만 해당)']
+  created_at timestamp
+}
+
+Table payment_transactions {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  item_name varchar(255)
+  mcc_code varchar(10)
+  general_amount decimal(10,2) [note: '일반 복지 포인트 결제분 - Guardrail AX 검증 대상 아님']
+  flexi_amount decimal(10,2) [note: '식대 이월 포인트 결제분 - Guardrail AX 검증 대상']
+  total_amount decimal(10,2)
+  approval_status varchar(20)
+  redemption_status varchar(20) [note: 'UNUSED/USED/REFUNDED - 구매 내역 페이지의 사용하기/환불하기 상태']
+  voucher_code varchar(50) [note: '사용하기 클릭 시 발급되는 바우처/숫자 코드']
+  created_at timestamp
+}
+
+Table guardrail_logs {
+  id bigint [pk, increment]
+  payment_id bigint [not null]
+  risk_score float
+  is_blocked boolean
+  block_reason text
+  source varchar(50) [note: 'LLM_TOOL_CALL_OPENAI | LLM_TOOL_CALL_ANTHROPIC | RULE_BASED_FALLBACK']
+  created_at timestamp
+}
+
+Table products {
+  id bigint [pk, increment]
+  name varchar(255)
+  category varchar(50)
+  price decimal(10,2)
+  is_cash_like boolean [default: false]
+  sort_order int [default: 100, note: '낮을수록 포인트 상점에서 먼저 노출']
+}
+
+Table guardrail_policy {
+  id bigint [pk]
+  block_gift_cards boolean [default: true]
+  block_cash_equivalents boolean [default: true]
+  risk_threshold float [default: 0.7]
+}
+
+Ref: companies.id < users.company_id
+Ref: companies.id < admins.company_id
+Ref: users.id < meal_balances.user_id
+Ref: users.id < point_ledgers.user_id
+Ref: users.id < payment_transactions.user_id
+Ref: payment_transactions.id - guardrail_logs.payment_id

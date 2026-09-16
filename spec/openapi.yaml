@@ -1,0 +1,807 @@
+openapi: 3.0.3
+info:
+  title: MealForward B2B AX Platform API
+  description: >
+    LLM Guardrail AX 기반 세무 리스크 없는 B2B 식대 이월 및 복지 정산 플랫폼 API 명세서.
+    비과세 식대 포인트의 이월/사용/정산 흐름과, 현금성 자산 결제를 자동 차단하는
+    AI 세무 가드레일(Guardrail AX) 엔드포인트를 포함한다.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Local Dev Server
+
+tags:
+  - name: Auth
+    description: 임직원/관리자 회원가입 및 로그인
+  - name: User
+    description: 임직원용 - 식대 잔액 조회 및 이월 신청
+  - name: Store
+    description: 포인트 상점 (일반 복지 포인트 / 식대 이월 포인트 통합)
+  - name: Payments
+    description: Guardrail AX 결제 승인
+  - name: Admin
+    description: HR/총무 관리자 - 정산 및 가드레일 정책 관리
+  - name: Batch
+    description: 연간 마감(9/30) 배치 스케줄러
+
+paths:
+  /auth/signup/user:
+    post:
+      tags: [Auth]
+      summary: 임직원 회원가입
+      operationId: signupUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                  example: "김정인"
+                email:
+                  type: string
+                  example: "jeongin.kim@example.com"
+                password:
+                  type: string
+                  example: "demo1234"
+                department:
+                  type: string
+                  example: "플랫폼개발팀"
+                employeeNo:
+                  type: string
+                  example: "E2024-104"
+      responses:
+        '200':
+          description: 가입 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthProfile'
+        '409':
+          description: 이미 가입된 이메일
+
+  /auth/signup/admin:
+    post:
+      tags: [Auth]
+      summary: 관리자 회원가입 (관리자 인증 키 필요)
+      description: >
+        adminKey가 서버의 ADMIN_SIGNUP_KEY와 일치해야만 가입이 승인된다.
+        관리자도 임직원이므로, 아직 같은 이메일의 임직원 계정이 없다면 동일한 이메일/비밀번호로
+        포인트 상점 이용이 가능한 임직원 계정을 함께 생성한다(반대 방향은 하지 않음).
+      operationId: signupAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, adminKey]
+              properties:
+                name:
+                  type: string
+                  example: "정관리"
+                email:
+                  type: string
+                  example: "admin@example.com"
+                password:
+                  type: string
+                  example: "admin1234"
+                adminKey:
+                  type: string
+                  description: 회사에서 발급한 관리자 인증 키 (ADMIN_SIGNUP_KEY)
+                  example: "MEALFORWARD-ADMIN-2026"
+      responses:
+        '200':
+          description: 가입 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthProfile'
+        '403':
+          description: 관리자 인증 키 불일치
+        '409':
+          description: 이미 가입된 이메일
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 임직원/관리자 로그인
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, role]
+              properties:
+                email:
+                  type: string
+                  example: "jeongin.kim@example.com"
+                password:
+                  type: string
+                  example: "demo1234"
+                role:
+                  type: string
+                  enum: [user, admin]
+                  example: "user"
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthProfile'
+        '401':
+          description: 이메일 또는 비밀번호 불일치
+
+  /user/meal-balance:
+    get:
+      tags: [User]
+      summary: 당월 미사용 식대 잔액 및 연간 마감 D-Day 조회
+      operationId: getMealBalance
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+          example: 1004
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealBalance'
+
+  /user/points:
+    get:
+      tags: [User]
+      summary: 보유 포인트 조회 (일반 복지 포인트 / 식대 이월 포인트 분리 표시)
+      operationId: getUserPoints
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+          example: 1004
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1004
+                  generalPoint:
+                    type: number
+                    example: 50000.00
+                  flexiMealPoint:
+                    type: number
+                    example: 32000.00
+                  flexiMealExpiredAt:
+                    type: string
+                    example: "2027-09-30T23:59:59Z"
+
+  /user/rollover/apply:
+    post:
+      tags: [User]
+      summary: 차월 복지 포인트로 식대 이월 신청
+      operationId: applyRollover
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, yearMonth]
+              properties:
+                userId:
+                  type: integer
+                  example: 1004
+                yearMonth:
+                  type: string
+                  example: "202609"
+      responses:
+        '200':
+          description: 이월 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  rolledAmount:
+                    type: number
+                    example: 32000.00
+                  targetPointType:
+                    type: string
+                    example: "FLEXI_MEAL"
+                  expiredAt:
+                    type: string
+                    example: "2027-09-30T23:59:59Z"
+        '409':
+          description: 이미 이월 완료된 당월 식대
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+
+  /user/purchases:
+    get:
+      tags: [User]
+      summary: 구매 내역 조회 (사용하기/환불하기 대상)
+      operationId: getUserPurchases
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+          example: 1004
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 501
+                    itemName:
+                      type: string
+                      example: "신세계 상품권 5만원권"
+                    generalAmount:
+                      type: number
+                      example: 20000.00
+                    flexiAmount:
+                      type: number
+                      example: 30000.00
+                    totalAmount:
+                      type: number
+                      example: 50000.00
+                    approvalStatus:
+                      type: string
+                      example: "APPROVED"
+                    redemptionStatus:
+                      type: string
+                      enum: [UNUSED, USED, REFUNDED]
+                      example: "UNUSED"
+                    voucherCode:
+                      type: string
+                      nullable: true
+                      description: "사용하기 이후에만 노출됩니다."
+                      example: null
+                    createdAt:
+                      type: string
+                      example: "2026-09-10T04:20:00Z"
+
+  /user/purchases/{id}/use:
+    post:
+      tags: [User]
+      summary: 구매 건 사용 처리 (바우처/숫자 코드 발급 확인)
+      operationId: useUserPurchase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 501
+      responses:
+        '200':
+          description: 사용 완료, 바우처 코드 반환
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  voucherCode:
+                    type: string
+                    example: "4821-9012-3345-7710"
+        '409':
+          description: 이미 사용했거나 환불된 구매
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+
+  /user/purchases/{id}/refund:
+    post:
+      tags: [User]
+      summary: 구매 건 환불 (결제에 사용한 포인트 종류로만 환불, 종류 간 교차 환불 불가)
+      operationId: refundUserPurchase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 501
+      responses:
+        '200':
+          description: 환불 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  refundedGeneralAmount:
+                    type: number
+                    example: 20000.00
+                  refundedFlexiAmount:
+                    type: number
+                    example: 30000.00
+        '409':
+          description: 이미 사용했거나 환불된 구매
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+
+  /store/products:
+    get:
+      tags: [Store]
+      summary: 포인트 상점 상품 목록 조회
+      operationId: getStoreProducts
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [BOOK, LEARNING, FITNESS, CAFE, GIFT_CARD]
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /payments/checkout:
+    post:
+      tags: [Payments]
+      summary: "[Guardrail AX] 포인트 결제 승인 요청 (일반/이월 포인트 분할 결제 지원)"
+      description: >
+        결제 금액을 일반 복지 포인트(generalAmount)와 식대 이월 포인트(flexiAmount)로 나눠서 낼 수 있다.
+        Guardrail AX는 flexiAmount > 0 인 경우에만 LLM Semantic Classifier로 현금성 자산 여부를 검사하며,
+        같은 상품이라도 generalAmount로 결제하는 부분은 검사 대상이 아니다(일반 복지 포인트는 현금성 자산 구매 가능).
+      operationId: processCheckout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, itemName]
+              properties:
+                userId:
+                  type: integer
+                  example: 1004
+                itemName:
+                  type: string
+                  example: "신세계 모바일 백화점 상품권 5만원권"
+                mccCode:
+                  type: string
+                  example: "5311"
+                generalAmount:
+                  type: number
+                  description: 일반 복지 포인트로 결제할 금액 (현금성 자산 구매 가능)
+                  example: 50000.00
+                flexiAmount:
+                  type: number
+                  description: 식대 이월 포인트로 결제할 금액 (현금성 자산이면 Guardrail AX가 차단)
+                  example: 0
+      responses:
+        '200':
+          description: 결제 승인 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paymentId:
+                    type: integer
+                    example: 98201
+                  status:
+                    type: string
+                    example: "APPROVED"
+                  generalRemaining:
+                    type: number
+                    example: 0.00
+                  flexiRemaining:
+                    type: number
+                    example: 12000.00
+        '400':
+          description: "[Guardrail AX] 식대 이월 포인트로 현금성 자산 결제 시도 차단"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardrailBlock'
+
+  /admin/settlements/summary:
+    get:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 전사 이월 정산 및 LLM Guardrail 차단 현황 조회"
+      operationId: getAdminSummary
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fiscalYear:
+                    type: string
+                    example: "2026"
+                  totalRolledOverAmount:
+                    type: number
+                    example: 45200000.00
+                  blockedCountByAI:
+                    type: integer
+                    example: 142
+                  savedTaxRiskCost:
+                    type: number
+                    example: 9040000.00
+
+  /admin/settlements/list:
+    get:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 부서별/직원별 이월 내역 조회"
+      operationId: getSettlementList
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: integer
+                    name:
+                      type: string
+                    department:
+                      type: string
+                    rolledAmount:
+                      type: number
+                    status:
+                      type: string
+                      example: "ACTIVE"
+
+  /admin/guardrail-policy:
+    get:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 가드레일 정책(현금성 자산 차단) 조회"
+      operationId: getGuardrailPolicy
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardrailPolicy'
+    put:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 가드레일 정책 갱신 (기본 ON 고정, 세부 민감도만 조정 가능)"
+      operationId: updateGuardrailPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardrailPolicy'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardrailPolicy'
+
+  /admin/settlements/finalize:
+    post:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 9월 말 연간 정산 최종 승인 및 ERP/회계 연동"
+      operationId: finalizeSettlement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fiscalYear:
+                  type: string
+                  example: "2026"
+      responses:
+        '200':
+          description: 정산 승인 및 ERP 전송 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  fiscalYear:
+                    type: string
+                    example: "2026"
+                  erpSyncStatus:
+                    type: string
+                    example: "SYNCED"
+
+  /admin/products:
+    get:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 복지 상품 목록 조회"
+      operationId: getAdminProducts
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    post:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 복지 상품 등록"
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, category, price]
+              properties:
+                name:
+                  type: string
+                  example: "온라인 강의 30% 할인 쿠폰"
+                category:
+                  type: string
+                  enum: [BOOK, LEARNING, FITNESS, CAFE, GIFT_CARD]
+                price:
+                  type: number
+                  example: 15000.00
+                isCashLike:
+                  type: boolean
+                  example: false
+      responses:
+        '200':
+          description: 등록 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: 필수 필드 누락
+
+  /admin/products/{id}:
+    put:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 복지 상품 수정"
+      operationId: updateProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+                  enum: [BOOK, LEARNING, FITNESS, CAFE, GIFT_CARD]
+                price:
+                  type: number
+                isCashLike:
+                  type: boolean
+      responses:
+        '200':
+          description: 수정 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: 상품 없음
+    delete:
+      tags: [Admin]
+      security:
+        - AdminSession: []
+      summary: "[Admin] 복지 상품 삭제"
+      operationId: deleteProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 삭제 완료
+        '404':
+          description: 상품 없음
+
+  /batch/expire-ledgers:
+    post:
+      tags: [Batch]
+      security:
+        - AdminSession: []
+      summary: "매년 9월 30일 23:59:59 스케줄러 Batch - 미사용 이월 포인트 자동 소멸"
+      description: 실제 운영에서는 cron 스케줄러가 매년 9/30에 자동 실행하며, 데모에서는 수동 트리거로 시뮬레이션한다.
+      operationId: expireLedgers
+      responses:
+        '200':
+          description: 소멸 처리 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  expiredCount:
+                    type: integer
+                    example: 3
+                  expiredAmount:
+                    type: number
+                    example: 96000.00
+
+components:
+  securitySchemes:
+    AdminSession:
+      type: apiKey
+      in: header
+      name: x-admin-id
+      description: 로그인한 관리자의 id. /auth/login(role=admin) 응답의 id 값을 그대로 전달한다.
+  schemas:
+    AuthProfile:
+      type: object
+      properties:
+        role:
+          type: string
+          example: "user"
+        id:
+          type: integer
+          example: 1004
+        name:
+          type: string
+          example: "김정인"
+        department:
+          type: string
+          example: "플랫폼개발팀"
+        employeeNo:
+          type: string
+          example: "E2024-104"
+    MealBalance:
+      type: object
+      properties:
+        userId:
+          type: integer
+          example: 1004
+        yearMonth:
+          type: string
+          example: "202609"
+        remainingAmount:
+          type: number
+          example: 32000.00
+        isRolledOver:
+          type: boolean
+          example: false
+        expirationDate:
+          type: string
+          example: "2026-09-30T23:59:59Z"
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "온라인 강의 30% 할인 쿠폰"
+        category:
+          type: string
+          example: "LEARNING"
+        price:
+          type: number
+          example: 15000.00
+        isCashLike:
+          type: boolean
+          description: 상품권/현금성 자산 여부 (true면 식대 이월 포인트로는 결제 불가, 일반 복지 포인트로는 결제 가능)
+          example: false
+    GuardrailPolicy:
+      type: object
+      properties:
+        blockGiftCards:
+          type: boolean
+          example: true
+        blockCashEquivalents:
+          type: boolean
+          example: true
+        riskThreshold:
+          type: number
+          description: 이 값 이상의 risk score는 자동 차단
+          example: 0.7
+    GuardrailBlock:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: "RESTRICTED_TAX_RISK_CATEGORY"
+        isBlocked:
+          type: boolean
+          example: true
+        blockedPortion:
+          type: string
+          example: "FLEXI_MEAL"
+        riskScore:
+          type: number
+          example: 0.96
+        blockReason:
+          type: string
+          example: "식대 이월 포인트는 세법 비과세 기준에 따라 백화점/주유 상품권 및 현금성 자산 구매가 불가능합니다."
+        hint:
+          type: string
+          example: "식대 이월 포인트로는 구매할 수 없습니다. 일반 복지 포인트로 결제해보세요."
+    ConflictError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: "DUPLICATE_ROLLOVER_REQUEST"
+        message:
+          type: string
+          example: "이미 당월 이월 처리가 완료되었습니다."

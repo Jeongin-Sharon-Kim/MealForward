@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MealForward - 회원가입</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🍽 MealForward</div>
+  <nav>
+    <a href="/index.html">홈</a>
+    <a href="/login.html">로그인</a>
+  </nav>
+</header>
+<main class="auth-card">
+  <h1>회원가입</h1>
+  <p class="subtitle">임직원과 관리자는 서로 다른 절차로 가입합니다.</p>
+
+  <div class="tabs" id="roleTabs">
+    <div class="tab active" data-role="user">임직원 회원가입</div>
+    <div class="tab" data-role="admin">관리자 회원가입</div>
+  </div>
+
+  <div class="card">
+    <div class="form-field">
+      <label>이름</label>
+      <input type="text" id="name" />
+    </div>
+    <div class="form-field">
+      <label>이메일</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+    <div class="form-field">
+      <label>비밀번호</label>
+      <input type="password" id="password" />
+    </div>
+
+    <div id="userFields">
+      <div class="form-field">
+        <label>부서 (선택)</label>
+        <input type="text" id="department" placeholder="예: 플랫폼개발팀" />
+      </div>
+    </div>
+
+    <div id="adminFields" hidden>
+      <div class="form-field">
+        <label>관리자 인증 키</label>
+        <input type="password" id="adminKey" placeholder="회사에서 발급받은 관리자 인증 키" />
+      </div>
+      <div class="tooltip">⚠️ 관리자 인증 키를 아는 담당자만 관리자로 가입할 수 있습니다. </div>
+    </div>
+
+    <button class="btn" id="signupBtn" style="width:100%;margin-top:8px;">회원가입</button>
+    <div id="signupResult"></div>
+  </div>
+
+  <p class="auth-switch">이미 계정이 있으신가요? <a href="/login.html">로그인</a></p>
+</main>
+
+<script src="/js/api.js"></script>
+<script>
+let role = 'user';
+
+document.getElementById('roleTabs').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('#roleTabs .tab').forEach((t) => t.classList.remove('active'));
+  e.target.classList.add('active');
+  role = e.target.dataset.role;
+  document.getElementById('userFields').hidden = role !== 'user';
+  document.getElementById('adminFields').hidden = role !== 'admin';
+});
+
+document.getElementById('signupBtn').addEventListener('click', async () => {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const resultEl = document.getElementById('signupResult');
+
+  if (!name || !email || !password) {
+    resultEl.innerHTML = `<div class="alert error">⛔ 이름, 이메일, 비밀번호를 모두 입력해주세요.</div>`;
+    return;
+  }
+
+  let path;
+  let body;
+  if (role === 'user') {
+    const department = document.getElementById('department').value.trim();
+    path = '/auth/signup/user';
+    body = { name, email, password, department };
+  } else {
+    const adminKey = document.getElementById('adminKey').value;
+    if (!adminKey) {
+      resultEl.innerHTML = `<div class="alert error">⛔ 관리자 인증 키를 입력해주세요.</div>`;
+      return;
+    }
+    path = '/auth/signup/admin';
+    body = { name, email, password, adminKey };
+  }
+
+  const { ok, data } = await api(path, { method: 'POST', body: JSON.stringify(body) });
+
+  if (ok) {
+    setSession(data);
+    resultEl.innerHTML = `<div class="alert success">✅ 가입이 완료되었습니다. 이동 중...</div>`;
+    setTimeout(() => {
+      window.location.href = data.role === 'admin' ? '/admin.html' : '/dashboard.html';
+    }, 600);
+  } else {
+    resultEl.innerHTML = `<div class="alert error">⛔ ${data.message || '가입에 실패했습니다.'}</div>`;
+  }
+});
+</script>
+</body>
+</html>

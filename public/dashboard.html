@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MealForward - 대시보드</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🍽 MealForward</div>
+  <nav>
+    <a href="/index.html">홈</a>
+    <a href="/store.html">포인트 상점</a>
+    <span id="authArea"></span>
+  </nav>
+</header>
+<main>
+  <h1>내 식대 & 이월 현황</h1>
+  <p class="subtitle" id="profileLine">-</p>
+
+  <div class="card">
+    <h2>총 복지 포인트</h2>
+    <div class="balance-amount" id="totalPoints">-</div>
+    <div class="balance-sub" id="pointsBreakdown"></div>
+    <div class="dday-label" id="annualExpiryLabel"></div>
+  </div>
+
+  <div class="card">
+    <h2>이번 달 남은 식대</h2>
+    <div class="balance-amount" id="remainingAmount">-</div>
+    <div class="balance-sub" id="rolloverStatus"></div>
+    <div class="dday-bar"><div id="ddayFill" style="width:0%"></div></div>
+    <div class="dday-label" id="ddayLabel">식대 포인트 소멸 예정일 계산 중...</div>
+  </div>
+
+  <div class="card">
+    <h2>차월 복지 포인트로 이월</h2>
+    <p style="font-size:14px;color:var(--muted);margin-top:0;">이월된 포인트는 매년 9월 30일까지 사용 가능하며, 도서/강의/식음료/자기계발 등에 사용할 수 있습니다.</p>
+    <button class="btn" id="rolloverBtn">1-Click 이월 신청</button>
+    <div class="tooltip">⚠️ 이월 포인트는 세법 기준에 따라 상품권·현금성 자산으로 교환할 수 없습니다.</div>
+    <div id="rolloverResult"></div>
+  </div>
+</main>
+
+<script src="/js/api.js"></script>
+<script>
+const session = requireUserSession();
+
+if (session) {
+  document.getElementById('authArea').innerHTML =
+    `<span class="name-dropdown"><a href="/dashboard.html" class="active">${session.name}님</a><span class="menu"><a href="/dashboard.html">내 식대 &amp; 이월 현황</a><a href="/purchases.html">구매 내역</a></span></span> <a href="#" id="logoutLink">로그아웃</a>`;
+  document.getElementById('logoutLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    clearSession();
+    window.location.href = '/login.html';
+  });
+  document.getElementById('profileLine').textContent =
+    `${session.name} (${session.employeeNo || '-'}) · ${session.department || '미배정'}`;
+}
+
+async function loadPoints() {
+  const { data } = await api(`/user/points?userId=${session.id}`);
+  const total = Number(data.generalPoint) + Number(data.flexiMealPoint);
+  document.getElementById('totalPoints').textContent = `${total.toLocaleString()}원`;
+  document.getElementById('pointsBreakdown').textContent =
+    `일반 복지 포인트 ${Number(data.generalPoint).toLocaleString()}원 · 식대 이월 포인트 ${Number(data.flexiMealPoint).toLocaleString()}원`;
+
+  const annualEl = document.getElementById('annualExpiryLabel');
+  if (data.flexiMealExpiredAt) {
+    const dateOnly = data.flexiMealExpiredAt.slice(0, 10).replace(/-/g, '. ') + '.';
+    annualEl.textContent = `연간 소멸 예정일 (식대 이월 포인트): ${dateOnly}`;
+  } else {
+    annualEl.textContent = '';
+  }
+}
+
+async function loadBalance() {
+  const { data } = await api(`/user/meal-balance?userId=${session.id}`);
+  document.getElementById('remainingAmount').textContent = `${Number(data.remainingAmount).toLocaleString()}원`;
+  document.getElementById('rolloverStatus').textContent = data.isRolledOver
+    ? '이미 이번 달 이월 신청을 완료했습니다.'
+    : '아직 이월 신청 전입니다.';
+
+  const rolloverBtn = document.getElementById('rolloverBtn');
+  rolloverBtn.disabled = data.isRolledOver;
+
+  const expiration = new Date(data.expirationDate);
+  const now = new Date();
+  const monthStart = new Date(expiration.getFullYear(), expiration.getMonth(), 1);
+  const totalDaysInMonth = Math.round((expiration - monthStart) / (1000 * 60 * 60 * 24)) + 1;
+  const daysLeft = Math.max(0, Math.ceil((expiration - now) / (1000 * 60 * 60 * 24)));
+  const pct = Math.max(2, Math.min(100, 100 - (daysLeft / totalDaysInMonth) * 100));
+  document.getElementById('ddayFill').style.width = `${pct}%`;
+  const dateOnly = data.expirationDate.slice(0, 10).replace(/-/g, '. ') + '.';
+  document.getElementById('ddayLabel').textContent = `식대 포인트 소멸 예정일: ${dateOnly} (D-${daysLeft})`;
+}
+
+document.getElementById('rolloverBtn').addEventListener('click', async () => {
+  const { ok, status, data } = await api('/user/rollover/apply', {
+    method: 'POST',
+    body: JSON.stringify({ userId: session.id, yearMonth: CURRENT_YEAR_MONTH }),
+  });
+
+  const resultEl = document.getElementById('rolloverResult');
+  if (ok) {
+    const expiredDate = data.expiredAt.slice(0, 10).replace(/-/g, '. ') + '.';
+    resultEl.innerHTML = `<div class="alert success">✅ ${Number(data.rolledAmount).toLocaleString()}원이 복지 포인트로 이월되었습니다. (만료: ${expiredDate})</div>`;
+    loadBalance();
+    loadPoints();
+  } else if (status === 409) {
+    resultEl.innerHTML = `<div class="alert error">⛔ ${data.message}</div>`;
+  } else {
+    resultEl.innerHTML = `<div class="alert error">⛔ 오류가 발생했습니다.</div>`;
+  }
+});
+
+if (session) {
+  loadBalance();
+  loadPoints();
+}
+</script>
+</body>
+</html>

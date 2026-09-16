@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MealForward</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🍽 MealForward</div>
+  <nav>
+    <a href="/index.html" class="active">홈</a>
+    <a href="/store.html" id="navStore" hidden>포인트 상점</a>
+    <span id="authArea"></span>
+  </nav>
+</header>
+<main>
+
+  <section class="hero reveal">
+    <span class="hero-badge">🛡️ AI 세무 가드레일 Guardrail AX 탑재</span>
+    <h1>세무 리스크 없는 B2B 식대 이월 &amp; 복지 정산 플랫폼</h1>
+    <p class="subtitle">당월 미사용 식대 포인트를 그냥 소멸시키지 마세요. Guardrail AX가 현금성 자산 구매만 실시간으로 자동 차단하며, 나머지는 복지 포인트로 자유롭게 전환됩니다.</p>
+    <div class="hero-actions" id="heroActions"></div>
+  </section>
+
+  <section class="stats-bar reveal">
+    <div class="stat">
+      <div class="stat-value">100%</div>
+      <div class="stat-label">이월 포인트의 현금성 자산 구매 자동 차단</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">+0원</div>
+      <div class="stat-label">추가 복지 예산 증액 없이 체감 복지 극대화</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">9/30</div>
+      <div class="stat-label">매년 이월 포인트 사용 마감일</div>
+    </div>
+  </section>
+
+  <section class="section-block reveal">
+    <h2 class="section-title">핵심 기능</h2>
+    <p class="section-desc">임직원과 HR/총무 관리자 각자의 화면에서 필요한 기능만 깔끔하게 제공합니다.</p>
+    <div class="feature-grid">
+      <a class="feature-card" href="/store.html">
+        <div class="feature-icon">🛍️</div>
+        <h3>포인트 상점</h3>
+        <p>일반/이월 포인트를 나눠서 결제하고, 현금성 자산은 이월 포인트로 결제할 수 없도록 실시간 검증합니다.</p>
+      </a>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>식대 이월 관리</h3>
+        <p>이번 달 남은 식대와 총 복지 포인트, 각각의 소멸 예정일을 한눈에 확인하고 1-Click으로 이월 신청합니다.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Guardrail AX</h3>
+        <p>LLM Tool Calling 기반 AI가 상품권·교환권 등 현금성 자산을 문맥까지 이해해 자동으로 감지하고 차단합니다.</p>
+      </div>
+      <a class="feature-card" href="/purchases.html">
+        <div class="feature-icon">🧾</div>
+        <h3>구매 내역</h3>
+        <p>구매한 상품을 사용하기(바우처 코드 확인)하거나, 결제에 쓴 포인트 그대로 환불받을 수 있습니다.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="section-block reveal">
+    <h2 class="section-title">어떻게 동작하나요</h2>
+    <p class="section-desc">복잡한 세무 지식 없이도 3단계로 끝납니다.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>미사용 식대 이월 신청</h3>
+        <p>이번 달 남은 식대를 1-Click으로 복지 포인트로 이월합니다.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>포인트 상점에서 자유롭게 사용</h3>
+        <p>도서, 강의, 운동, 커피 등 원하는 복지 상품을 결제합니다.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>AI가 실시간으로 세무 리스크 차단</h3>
+        <p>이월 포인트로 현금성 자산을 사려는 시도만 Guardrail AX가 자동으로 막습니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-footer reveal">
+    <h2>지금 바로 시작해보세요</h2>
+    <p>회원가입 후 바로 이월 신청과 포인트 상점 이용이 가능합니다.</p>
+    <div id="ctaAction"></div>
+  </section>
+
+  <p class="footer-note">Guardrail AX는 OPENAI_API_KEY 설정 시 실제 LLM으로 판단하고, 미설정 시 룰 기반 폴백으로 동작합니다.</p>
+</main>
+
+<script src="/js/api.js"></script>
+<script>
+const session = getSession();
+const authArea = document.getElementById('authArea');
+const heroActions = document.getElementById('heroActions');
+const ctaAction = document.getElementById('ctaAction');
+
+if (session) {
+  if (session.role === 'user') {
+    authArea.innerHTML = `<span class="name-dropdown"><a href="/dashboard.html">${session.name}님</a><span class="menu"><a href="/dashboard.html">내 식대 &amp; 이월 현황</a><a href="/purchases.html">구매 내역</a></span></span> <a href="#" id="logoutLink">로그아웃</a>`;
+    heroActions.innerHTML = `<a class="btn" href="/store.html">포인트 상점 바로가기</a><a class="btn secondary" href="/dashboard.html">내 식대 &amp; 이월 현황</a>`;
+    ctaAction.innerHTML = `<a class="btn" href="/store.html">포인트 상점으로 이동</a>`;
+  } else {
+    authArea.innerHTML = `<a href="/admin.html">${session.name}님</a> <a href="#" id="logoutLink">로그아웃</a>`;
+    heroActions.innerHTML = `<a class="btn" href="/admin.html">관리자 화면으로 이동</a>`;
+    ctaAction.innerHTML = `<a class="btn" href="/admin.html">관리자 화면으로 이동</a>`;
+  }
+  document.getElementById('logoutLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    clearSession();
+    window.location.reload();
+  });
+  if (session.role === 'user') {
+    document.getElementById('navStore').hidden = false;
+  }
+} else {
+  authArea.innerHTML = `<a href="/login.html">로그인</a> <a href="/signup.html">회원가입</a>`;
+  heroActions.innerHTML = `<a class="btn" href="/signup.html">회원가입</a><a class="btn secondary" href="/login.html">로그인</a>`;
+  ctaAction.innerHTML = `<a class="btn" href="/signup.html">무료로 시작하기</a>`;
+}
+
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+revealEls.forEach((el) => observer.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "mealforward",
+  "version": "1.0.0",
+  "description": "MealForward - 세무 리스크 없는 B2B 식대 이월 및 복지 정산 플랫폼",
+  "main": "server/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.23.0",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  }
+}

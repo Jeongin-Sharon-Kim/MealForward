@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MealForward - 로그인</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🍽 MealForward</div>
+  <nav>
+    <a href="/index.html">홈</a>
+    <a href="/signup.html">회원가입</a>
+  </nav>
+</header>
+<main class="auth-card">
+  <h1>로그인</h1>
+  <p class="subtitle">임직원 또는 관리자 계정으로 로그인하세요.</p>
+
+  <div class="tabs" id="roleTabs">
+    <div class="tab active" data-role="user">임직원</div>
+    <div class="tab" data-role="admin">관리자</div>
+  </div>
+
+  <div class="card">
+    <div class="form-field">
+      <label>이메일</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+    <div class="form-field">
+      <label>비밀번호</label>
+      <input type="password" id="password" />
+    </div>
+    <button class="btn" id="loginBtn" style="width:100%;">로그인</button>
+    <div id="loginResult"></div>
+  </div>
+
+  <p class="auth-switch">계정이 없으신가요? <a href="/signup.html">회원가입</a></p>
+  <p class="footer-note">데모 계정: 임직원 jeongin.kim@example.com / demo1234 · 관리자 admin@example.com / admin1234</p>
+</main>
+
+<script src="/js/api.js"></script>
+<script>
+let role = 'user';
+
+document.getElementById('roleTabs').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('#roleTabs .tab').forEach((t) => t.classList.remove('active'));
+  e.target.classList.add('active');
+  role = e.target.dataset.role;
+});
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const resultEl = document.getElementById('loginResult');
+
+  if (!email || !password) {
+    resultEl.innerHTML = `<div class="alert error">⛔ 이메일과 비밀번호를 입력해주세요.</div>`;
+    return;
+  }
+
+  const { ok, data } = await api('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, role }),
+  });
+
+  if (ok) {
+    setSession(data);
+    window.location.href = data.role === 'admin' ? '/admin.html' : '/dashboard.html';
+  } else {
+    resultEl.innerHTML = `<div class="alert error">⛔ ${data.message || '로그인에 실패했습니다.'}</div>`;
+  }
+});
+</script>
+</body>
+</html>

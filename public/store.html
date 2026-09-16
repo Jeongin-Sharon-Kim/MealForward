@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MealForward - 포인트 상점</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🍽 MealForward</div>
+  <nav>
+    <a href="/index.html">홈</a>
+    <a href="/store.html" class="active">포인트 상점</a>
+    <span id="authArea"></span>
+  </nav>
+</header>
+<main>
+  <h1>포인트 상점</h1>
+  <p class="subtitle">상품을 클릭하면 결제 방식을 선택할 수 있습니다. 식대 이월 포인트는 상품권·현금성 자산에는 사용할 수 없으며, Guardrail AX가 결제 시점에 자동으로 검증합니다.</p>
+
+  <div class="points-bar">
+    <div class="pill">일반 복지 포인트 <b id="generalPoint">-</b></div>
+    <div class="pill">식대 이월 포인트 <b id="flexiPoint">-</b></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-cat="">전체</div>
+    <div class="tab" data-cat="BOOK">도서</div>
+    <div class="tab" data-cat="LEARNING">강의/자기계발</div>
+    <div class="tab" data-cat="FITNESS">운동</div>
+    <div class="tab" data-cat="CAFE">커피쿠폰</div>
+    <div class="tab" data-cat="GIFT_CARD">상품권/이용권
+    </div>
+  </div>
+
+  <div class="product-grid" id="productGrid"></div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-photo"><img id="modalPhoto" src="" alt="" /></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-price" id="modalPrice"></div>
+
+    <div class="tabs" id="payModeTabs" style="margin:0 0 10px;">
+      <div class="tab pay-mode active" data-mode="general">복지 포인트</div>
+      <div class="tab pay-mode" data-mode="flexi">이월 포인트</div>
+      <div class="tab pay-mode" data-mode="split">나눠서 결제</div>
+    </div>
+    <div class="pay-note" id="cashLikeNote" hidden>🔒 상품권/현금성 자산은 <b>일반 복지 포인트</b>로만 결제할 수 있습니다.</div>
+    <div class="split-inputs" id="splitInputs" hidden>
+      <input type="number" id="splitGeneral" min="0" />
+      <span>+</span>
+      <input type="number" id="splitFlexi" min="0" />
+      <span id="splitTotalLabel"></span>
+    </div>
+    <button class="btn" id="confirmPayBtn" style="width:100%;">결제하기</button>
+    <div id="checkoutResult"></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const session = requireUserSession();
+let products = [];
+let currentProduct = null;
+let currentMode = 'general';
+
+const PRODUCT_IMAGE = {
+  1: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop',
+  2: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop',
+  3: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600&auto=format&fit=crop',
+  4: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=600&auto=format&fit=crop',
+  5: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgMTkwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCc+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9J2cxJyB4MT0nMCcgeTE9JzAnIHgyPScxJyB5Mj0nMSc+CiAgICAgIDxzdG9wIG9mZnNldD0nMCUnIHN0b3AtY29sb3I9JyM3YzNhZWQnLz4KICAgICAgPHN0b3Agb2Zmc2V0PScxMDAlJyBzdG9wLWNvbG9yPScjZWM0ODk5Jy8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCcgZmlsbD0ndXJsKCNnMSknLz4KICA8Y2lyY2xlIGN4PScyNjAnIGN5PSc0MCcgcj0nNzAnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8Y2lyY2xlIGN4PSc0MCcgY3k9JzE2MCcgcj0nNTAnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8ZyB0cmFuc2Zvcm09J3RyYW5zbGF0ZSgxMTAsNTUpJz4KICAgIDxyZWN0IHg9JzAnIHk9JzIwJyB3aWR0aD0nODAnIGhlaWdodD0nNTgnIHJ4PSc4JyBmaWxsPScjZmZmZmZmJyBvcGFjaXR5PScwLjk1Jy8+CiAgICA8cmVjdCB4PScwJyB5PSczOCcgd2lkdGg9JzgwJyBoZWlnaHQ9JzEwJyBmaWxsPScjN2MzYWVkJyBvcGFjaXR5PScwLjcnLz4KICAgIDxyZWN0IHg9JzEwJyB5PSc1NScgd2lkdGg9JzMwJyBoZWlnaHQ9JzgnIHJ4PScyJyBmaWxsPScjZWM0ODk5JyBvcGFjaXR5PScwLjYnLz4KICAgIDxwYXRoIGQ9J00zMCAyMCBsMTAgLTE0IGwxMCAxNCB6JyBmaWxsPScjZmZlOWE4Jy8+CiAgPC9nPgo8L3N2Zz4=",
+  6: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgMTkwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCc+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9J2cyJyB4MT0nMCcgeTE9JzAnIHgyPScxJyB5Mj0nMSc+CiAgICAgIDxzdG9wIG9mZnNldD0nMCUnIHN0b3AtY29sb3I9JyMwZWE1ZTknLz4KICAgICAgPHN0b3Agb2Zmc2V0PScxMDAlJyBzdG9wLWNvbG9yPScjMTRiOGE2Jy8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCcgZmlsbD0ndXJsKCNnMiknLz4KICA8Y2lyY2xlIGN4PSczMCcgY3k9JzMwJyByPSc2MCcgZmlsbD0nI2ZmZmZmZicgb3BhY2l0eT0nMC4wOCcvPgogIDxjaXJjbGUgY3g9JzI3MCcgY3k9JzE3MCcgcj0nNjAnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8ZyB0cmFuc2Zvcm09J3RyYW5zbGF0ZSgxMTAsNDUpJz4KICAgIDxyZWN0IHg9JzAnIHk9JzAnIHdpZHRoPSc4MCcgaGVpZ2h0PSc4MCcgcng9JzE0JyBmaWxsPScjZmZmZmZmJyBvcGFjaXR5PScwLjk1Jy8+CiAgICA8cmVjdCB4PScxNCcgeT0nMTQnIHdpZHRoPScxNCcgaGVpZ2h0PScxNCcgZmlsbD0nIzBlYTVlOScvPgogICAgPHJlY3QgeD0nNTInIHk9JzE0JyB3aWR0aD0nMTQnIGhlaWdodD0nMTQnIGZpbGw9JyMwZWE1ZTknLz4KICAgIDxyZWN0IHg9JzE0JyB5PSc1Micgd2lkdGg9JzE0JyBoZWlnaHQ9JzE0JyBmaWxsPScjMGVhNWU5Jy8+CiAgICA8cmVjdCB4PSczMycgeT0nMzMnIHdpZHRoPScxNCcgaGVpZ2h0PScxNCcgZmlsbD0nIzBlYTVlOScvPgogICAgPHJlY3QgeD0nNTInIHk9JzUyJyB3aWR0aD0nMTQnIGhlaWdodD0nMTQnIGZpbGw9JyMwZWE1ZTknLz4KICA8L2c+Cjwvc3ZnPg==",
+  7: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgMTkwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCc+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9J2czJyB4MT0nMCcgeTE9JzAnIHgyPScxJyB5Mj0nMSc+CiAgICAgIDxzdG9wIG9mZnNldD0nMCUnIHN0b3AtY29sb3I9JyNlMTFkNDgnLz4KICAgICAgPHN0b3Agb2Zmc2V0PScxMDAlJyBzdG9wLWNvbG9yPScjZjQzZjVlJy8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCcgZmlsbD0ndXJsKCNnMyknLz4KICA8Y2lyY2xlIGN4PScyNjAnIGN5PSczMCcgcj0nNzAnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8Y2lyY2xlIGN4PSczMCcgY3k9JzE3MCcgcj0nNTUnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8ZyB0cmFuc2Zvcm09J3RyYW5zbGF0ZSgxMjAsNTUpJyBmaWxsPSdub25lJyBzdHJva2U9JyNmZmZmZmYnIHN0cm9rZS13aWR0aD0nNicgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJyBvcGFjaXR5PScwLjk1Jz4KICAgIDxyZWN0IHg9JzInIHk9JzE4JyB3aWR0aD0nNDAnIGhlaWdodD0nNTQnIHJ4PSc1Jy8+CiAgICA8bGluZSB4MT0nMicgeTE9JzMyJyB4Mj0nNDInIHkyPSczMicvPgogICAgPHBhdGggZD0nTTQyIDI4IGgxMiBhNyA3IDAgMCAxIDcgNyB2MjIgYTcgNyAwIDAgMCA3IDcnLz4KICAgIDxjaXJjbGUgY3g9JzY4JyBjeT0nNjgnIHI9JzQnIGZpbGw9JyNmZmZmZmYnIHN0cm9rZT0nbm9uZScvPgogIDwvZz4KPC9zdmc+",
+  11: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgMTkwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCc+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9J2c0JyB4MT0nMCcgeTE9JzAnIHgyPScxJyB5Mj0nMSc+CiAgICAgIDxzdG9wIG9mZnNldD0nMCUnIHN0b3AtY29sb3I9JyNkYzI2MjYnLz4KICAgICAgPHN0b3Agb2Zmc2V0PScxMDAlJyBzdG9wLWNvbG9yPScjN2MzYWVkJy8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCcgZmlsbD0ndXJsKCNnNCknLz4KICA8Y2lyY2xlIGN4PScyNjAnIGN5PSc0MCcgcj0nNzAnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8Y2lyY2xlIGN4PSc0MCcgY3k9JzE2MCcgcj0nNTAnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8ZyB0cmFuc2Zvcm09J3RyYW5zbGF0ZSgxMTAsNTUpJz4KICAgIDxyZWN0IHg9JzAnIHk9JzIwJyB3aWR0aD0nODAnIGhlaWdodD0nNTgnIHJ4PSc4JyBmaWxsPScjZmZmZmZmJyBvcGFjaXR5PScwLjk1Jy8+CiAgICA8cmVjdCB4PScwJyB5PSczOCcgd2lkdGg9JzgwJyBoZWlnaHQ9JzEwJyBmaWxsPScjZGMyNjI2JyBvcGFjaXR5PScwLjcnLz4KICAgIDxyZWN0IHg9JzEwJyB5PSc1NScgd2lkdGg9JzMwJyBoZWlnaHQ9JzgnIHJ4PScyJyBmaWxsPScjN2MzYWVkJyBvcGFjaXR5PScwLjYnLz4KICAgIDxjaXJjbGUgY3g9JzQwJyBjeT0nMTAnIHI9JzknIGZpbGw9JyNmZmU5YTgnLz4KICA8L2c+Cjwvc3ZnPg==",
+  12: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgMTkwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCc+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9J2c1JyB4MT0nMCcgeTE9JzAnIHgyPScxJyB5Mj0nMSc+CiAgICAgIDxzdG9wIG9mZnNldD0nMCUnIHN0b3AtY29sb3I9JyMzMzQxNTUnLz4KICAgICAgPHN0b3Agb2Zmc2V0PScxMDAlJyBzdG9wLWNvbG9yPScjMGVhNWU5Jy8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0nMzAwJyBoZWlnaHQ9JzE5MCcgZmlsbD0ndXJsKCNnNSknLz4KICA8Y2lyY2xlIGN4PSczMCcgY3k9JzMwJyByPSc2MCcgZmlsbD0nI2ZmZmZmZicgb3BhY2l0eT0nMC4wOCcvPgogIDxjaXJjbGUgY3g9JzI3MCcgY3k9JzE3MCcgcj0nNjAnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuMDgnLz4KICA8ZyB0cmFuc2Zvcm09J3RyYW5zbGF0ZSgxMjgsMzUpJz4KICAgIDxyZWN0IHg9JzAnIHk9JzAnIHdpZHRoPSc0NCcgaGVpZ2h0PSc3OCcgcng9JzgnIGZpbGw9JyNmZmZmZmYnIG9wYWNpdHk9JzAuOTUnLz4KICAgIDxyZWN0IHg9JzYnIHk9JzgnIHdpZHRoPSczMicgaGVpZ2h0PSc1NCcgcng9JzInIGZpbGw9JyMzMzQxNTUnIG9wYWNpdHk9JzAuNScvPgogICAgPGNpcmNsZSBjeD0nMjInIGN5PSc2OScgcj0nNCcgZmlsbD0nIzMzNDE1NScgb3BhY2l0eT0nMC41Jy8+CiAgPC9nPgo8L3N2Zz4=",
+};
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&auto=format&fit=crop';
+
+if (session) {
+  document.getElementById('authArea').innerHTML =
+    `<span class="name-dropdown"><a href="/dashboard.html">${session.name}님</a><span class="menu"><a href="/dashboard.html">내 식대 &amp; 이월 현황</a><a href="/purchases.html">구매 내역</a></span></span> <a href="#" id="logoutLink">로그아웃</a>`;
+  document.getElementById('logoutLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    clearSession();
+    window.location.href = '/login.html';
+  });
+}
+
+async function loadPoints() {
+  const { data } = await api(`/user/points?userId=${session.id}`);
+  document.getElementById('generalPoint').textContent = `${Number(data.generalPoint).toLocaleString()}원`;
+  document.getElementById('flexiPoint').textContent = `${Number(data.flexiMealPoint).toLocaleString()}원`;
+}
+
+function renderProducts(list) {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = list.map((p) => `
+    <div class="product-card" onclick="openModal(${p.id})">
+      <div class="bg-photo" style="background-image:url('${PRODUCT_IMAGE[p.id] || FALLBACK_IMAGE}')"></div>
+      <div class="card-body">
+        ${p.isCashLike ? '<span class="badge-blocked">이월 포인트 결제 불가</span><br/>' : ''}
+        <div class="name">${p.name}</div>
+        <div class="price">${Number(p.price).toLocaleString()}원</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadProducts(category) {
+  const qs = category ? `?category=${category}` : '';
+  const { data } = await api(`/store/products${qs}`);
+  products = data;
+  renderProducts(products);
+}
+
+function findProduct(id) {
+  return products.find((p) => p.id === id);
+}
+
+function openModal(id) {
+  currentProduct = findProduct(id);
+  currentMode = 'general';
+
+  document.getElementById('modalPhoto').src = PRODUCT_IMAGE[currentProduct.id] || FALLBACK_IMAGE;
+  document.getElementById('modalTitle').textContent = currentProduct.name;
+  document.getElementById('modalPrice').textContent = `${Number(currentProduct.price).toLocaleString()}원`;
+  document.getElementById('checkoutResult').innerHTML = '';
+
+  const flexiTab = document.querySelector('.pay-mode[data-mode="flexi"]');
+  const splitTab = document.querySelector('.pay-mode[data-mode="split"]');
+  document.getElementById('cashLikeNote').hidden = !currentProduct.isCashLike;
+  splitTab.hidden = currentProduct.isCashLike;
+  flexiTab.textContent = '이월 포인트';
+
+  document.querySelectorAll('.pay-mode').forEach((t) => t.classList.remove('active'));
+  document.querySelector('.pay-mode[data-mode="general"]').classList.add('active');
+  document.getElementById('splitInputs').hidden = true;
+
+  const half = Math.round(currentProduct.price / 2);
+  document.getElementById('splitGeneral').value = half;
+  document.getElementById('splitGeneral').max = currentProduct.price;
+  document.getElementById('splitFlexi').value = currentProduct.price - half;
+  document.getElementById('splitFlexi').max = currentProduct.price;
+  document.getElementById('splitTotalLabel').textContent = `= ${Number(currentProduct.price).toLocaleString()}원`;
+
+  document.getElementById('modalOverlay').hidden = false;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').hidden = true;
+  currentProduct = null;
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+
+document.getElementById('payModeTabs').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('pay-mode') || e.target.hidden) return;
+  document.querySelectorAll('.pay-mode').forEach((t) => t.classList.remove('active'));
+  e.target.classList.add('active');
+  currentMode = e.target.dataset.mode;
+  document.getElementById('splitInputs').hidden = currentMode !== 'split';
+});
+
+document.getElementById('confirmPayBtn').addEventListener('click', () => {
+  if (!currentProduct) return;
+
+  let generalAmount = 0;
+  let flexiAmount = 0;
+
+  if (currentMode === 'general') {
+    generalAmount = currentProduct.price;
+  } else if (currentMode === 'flexi') {
+    flexiAmount = currentProduct.price;
+  } else {
+    generalAmount = Number(document.getElementById('splitGeneral').value) || 0;
+    flexiAmount = Number(document.getElementById('splitFlexi').value) || 0;
+    if (generalAmount + flexiAmount !== currentProduct.price) {
+      document.getElementById('checkoutResult').innerHTML =
+        `<div class="alert error">⛔ 복지 포인트 + 이월 포인트 합계가 상품 가격(${Number(currentProduct.price).toLocaleString()}원)과 일치해야 합니다.</div>`;
+      return;
+    }
+  }
+
+  checkout(currentProduct.id, generalAmount, flexiAmount);
+});
+
+async function checkout(productId, generalAmount, flexiAmount) {
+  const product = findProduct(productId);
+  const resultEl = document.getElementById('checkoutResult');
+  resultEl.innerHTML = flexiAmount > 0
+    ? `<div class="alert">🤖 Guardrail AX가 이월 포인트 결제분을 분석 중입니다...</div>`
+    : `<div class="alert">결제 처리 중...</div>`;
+
+  const { ok, status, data } = await api('/payments/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ userId: session.id, itemName: product.name, generalAmount, flexiAmount }),
+  });
+
+  if (ok) {
+    resultEl.innerHTML = `<div class="alert success">✅ 결제 승인 완료. 남은 복지 포인트: ${Number(data.generalRemaining).toLocaleString()}원 / 남은 이월 포인트: ${Number(data.flexiRemaining).toLocaleString()}원</div>`;
+    loadPoints();
+  } else if (status === 400 && data.isBlocked) {
+    resultEl.innerHTML = `<div class="alert error">⛔ [Guardrail AX 차단] ${data.blockReason}<br/><small>${data.hint} · risk score: ${data.riskScore}</small></div>`;
+  } else {
+    resultEl.innerHTML = `<div class="alert error">⛔ ${data.message || '결제에 실패했습니다.'}</div>`;
+  }
+}
+
+document.getElementById('tabs').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('#tabs .tab').forEach((t) => t.classList.remove('active'));
+  e.target.classList.add('active');
+  loadProducts(e.target.dataset.cat);
+});
+
+if (session) {
+  loadPoints();
+  loadProducts('');
+}
+</script>
+</body>
+</html>

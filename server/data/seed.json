@@ -1,0 +1,670 @@
+{
+  "companies": [
+    {
+      "id": 1,
+      "name": "스카라테크",
+      "bizNo": "123-45-67890",
+      "fiscalYearEndMonth": 9
+    }
+  ],
+  "users": [
+    {
+      "id": 1004,
+      "companyId": 1,
+      "employeeNo": "E2024-104",
+      "name": "김정인",
+      "department": "플랫폼개발팀",
+      "email": "jeongin.kim@example.com",
+      "passwordHash": "37caf31c192bdf2cdfd02be3c4e2785e:aae0ebf58d519a906da8c6a290a448e1cda376490bd48ac7310ed9f1c4ac2f688cd6a648569f82a7d5ac2f4d47e3d044ee0990b3fe46debad8d136d5288771ad"
+    },
+    {
+      "id": 1005,
+      "companyId": 1,
+      "employeeNo": "E2023-088",
+      "name": "이서준",
+      "department": "인사팀",
+      "email": "seojun.lee@example.com",
+      "passwordHash": "37caf31c192bdf2cdfd02be3c4e2785e:aae0ebf58d519a906da8c6a290a448e1cda376490bd48ac7310ed9f1c4ac2f688cd6a648569f82a7d5ac2f4d47e3d044ee0990b3fe46debad8d136d5288771ad"
+    },
+    {
+      "id": 1006,
+      "companyId": 1,
+      "employeeNo": "E2022-041",
+      "name": "박하늘",
+      "department": "마케팅팀",
+      "email": "haneul.park@example.com",
+      "passwordHash": "37caf31c192bdf2cdfd02be3c4e2785e:aae0ebf58d519a906da8c6a290a448e1cda376490bd48ac7310ed9f1c4ac2f688cd6a648569f82a7d5ac2f4d47e3d044ee0990b3fe46debad8d136d5288771ad"
+    },
+    {
+      "id": 1011,
+      "companyId": 1,
+      "employeeNo": "E-1011",
+      "name": "최유진",
+      "department": "재무팀",
+      "email": "yujin.choi@example.com",
+      "passwordHash": "c059028fb674af9068eddc7d966d34d6:bc7254d9fdec78b87b7446e4fb8621c6d402a29b9ca613fe74b75ef3760e2714c4cf9b0c1d1f7a1acbbde35a72d55aad3f9f15d25bdd8e8cfab2abb9b3c21ac3"
+    },
+    {
+      "id": 1012,
+      "companyId": 1,
+      "employeeNo": "E-1012",
+      "name": "정도윤",
+      "department": "영업팀",
+      "email": "doyoon.jung@example.com",
+      "passwordHash": "c059028fb674af9068eddc7d966d34d6:bc7254d9fdec78b87b7446e4fb8621c6d402a29b9ca613fe74b75ef3760e2714c4cf9b0c1d1f7a1acbbde35a72d55aad3f9f15d25bdd8e8cfab2abb9b3c21ac3"
+    },
+    {
+      "id": 1013,
+      "companyId": 1,
+      "employeeNo": "E-1013",
+      "name": "한소미",
+      "department": "디자인팀",
+      "email": "somi.han@example.com",
+      "passwordHash": "c059028fb674af9068eddc7d966d34d6:bc7254d9fdec78b87b7446e4fb8621c6d402a29b9ca613fe74b75ef3760e2714c4cf9b0c1d1f7a1acbbde35a72d55aad3f9f15d25bdd8e8cfab2abb9b3c21ac3"
+    },
+    {
+      "id": 1014,
+      "companyId": 1,
+      "employeeNo": "E-1014",
+      "name": "오지훈",
+      "department": "개발2팀",
+      "email": "jihoon.oh@example.com",
+      "passwordHash": "c059028fb674af9068eddc7d966d34d6:bc7254d9fdec78b87b7446e4fb8621c6d402a29b9ca613fe74b75ef3760e2714c4cf9b0c1d1f7a1acbbde35a72d55aad3f9f15d25bdd8e8cfab2abb9b3c21ac3"
+    },
+    {
+      "id": 1015,
+      "companyId": 1,
+      "employeeNo": "E-1015",
+      "name": "강민서",
+      "department": "총무팀",
+      "email": "minseo.kang@example.com",
+      "passwordHash": "c059028fb674af9068eddc7d966d34d6:bc7254d9fdec78b87b7446e4fb8621c6d402a29b9ca613fe74b75ef3760e2714c4cf9b0c1d1f7a1acbbde35a72d55aad3f9f15d25bdd8e8cfab2abb9b3c21ac3"
+    },
+    {
+      "id": 1016,
+      "companyId": 1,
+      "employeeNo": "E-1016",
+      "name": "윤하경",
+      "department": "고객지원팀",
+      "email": "hagyeong.yoon@example.com",
+      "passwordHash": "c059028fb674af9068eddc7d966d34d6:bc7254d9fdec78b87b7446e4fb8621c6d402a29b9ca613fe74b75ef3760e2714c4cf9b0c1d1f7a1acbbde35a72d55aad3f9f15d25bdd8e8cfab2abb9b3c21ac3"
+    },
+    {
+      "id": 1017,
+      "companyId": 1,
+      "employeeNo": "E-1017",
+      "name": "배수아",
+      "department": "플랫폼개발팀",
+      "email": "sua.bae@example.com",
+      "passwordHash": "c059028fb674af9068eddc7d966d34d6:bc7254d9fdec78b87b7446e4fb8621c6d402a29b9ca613fe74b75ef3760e2714c4cf9b0c1d1f7a1acbbde35a72d55aad3f9f15d25bdd8e8cfab2abb9b3c21ac3"
+    }
+  ],
+  "admins": [
+    {
+      "id": 9001,
+      "companyId": 1,
+      "name": "정관리",
+      "email": "admin@example.com",
+      "passwordHash": "46ef83b24ff67984916016abac9800ec:103c5fd2f2dc54c2fa5cf3af279bfb3ecbb60837f3fab7d85731522ea48dc4ad7c21251c9520cf8a34a5fd025210a09c4eb354d6145bbf33ca247c7c52ea72bb"
+    },
+    {
+      "id": 9002,
+      "companyId": 1,
+      "name": "김관리",
+      "email": "admin.kim@sk.com",
+      "passwordHash": "c9f221086bd9788bd14f95aa24c1e63e:b941649b13f6e49933a48665594b0eeba487b2d45889bbd00bfdacab21863b1d0fc0ae5190d12ccfe1b7e4191441fc55a38a0e1d2396022e627aea3d16d317b6"
+    }
+  ],
+  "mealBalances": [
+    {
+      "id": 1,
+      "userId": 1004,
+      "yearMonth": "202609",
+      "remainingAmount": 0,
+      "isRolledOver": true,
+      "createdAt": "2026-09-15T08:26:31.659Z"
+    },
+    {
+      "id": 2,
+      "userId": 1005,
+      "yearMonth": "202609",
+      "remainingAmount": 18500,
+      "isRolledOver": false,
+      "createdAt": "2026-09-15T08:26:31.659Z"
+    },
+    {
+      "id": 3,
+      "userId": 1006,
+      "yearMonth": "202609",
+      "remainingAmount": 0,
+      "isRolledOver": false,
+      "createdAt": "2026-09-15T08:26:31.660Z"
+    },
+    {
+      "id": 8,
+      "userId": 1011,
+      "yearMonth": "202609",
+      "remainingAmount": 45000,
+      "isRolledOver": false,
+      "createdAt": "2026-09-16T01:35:36.570Z"
+    },
+    {
+      "id": 9,
+      "userId": 1012,
+      "yearMonth": "202609",
+      "remainingAmount": 0,
+      "isRolledOver": true,
+      "createdAt": "2026-09-16T01:35:36.573Z"
+    },
+    {
+      "id": 10,
+      "userId": 1013,
+      "yearMonth": "202609",
+      "remainingAmount": 800,
+      "isRolledOver": false,
+      "createdAt": "2026-09-16T01:35:36.575Z"
+    },
+    {
+      "id": 11,
+      "userId": 1014,
+      "yearMonth": "202609",
+      "remainingAmount": 23000,
+      "isRolledOver": false,
+      "createdAt": "2026-09-16T01:35:36.576Z"
+    },
+    {
+      "id": 12,
+      "userId": 1015,
+      "yearMonth": "202609",
+      "remainingAmount": 0,
+      "isRolledOver": false,
+      "createdAt": "2026-09-16T01:35:36.578Z"
+    },
+    {
+      "id": 13,
+      "userId": 1016,
+      "yearMonth": "202609",
+      "remainingAmount": 9000,
+      "isRolledOver": false,
+      "createdAt": "2026-09-16T01:35:36.579Z"
+    },
+    {
+      "id": 14,
+      "userId": 1017,
+      "yearMonth": "202609",
+      "remainingAmount": 15000,
+      "isRolledOver": false,
+      "createdAt": "2026-09-16T01:35:36.580Z"
+    }
+  ],
+  "pointLedgers": [
+    {
+      "id": 5001,
+      "userId": 1004,
+      "pointType": "GENERAL",
+      "amount": 0,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-15T08:26:31.660Z"
+    },
+    {
+      "id": 5501,
+      "userId": 1004,
+      "pointType": "FLEXI_MEAL",
+      "amount": 44000,
+      "status": "ACTIVE",
+      "expiredAt": "2026-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-15T08:26:31.660Z"
+    },
+    {
+      "id": 5502,
+      "userId": 1005,
+      "pointType": "FLEXI_MEAL",
+      "amount": 6500,
+      "status": "ACTIVE",
+      "expiredAt": "2026-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-15T08:26:31.661Z"
+    },
+    {
+      "id": 5503,
+      "userId": 1006,
+      "pointType": "FLEXI_MEAL",
+      "amount": 4000,
+      "status": "EXPIRED",
+      "expiredAt": "2025-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-15T08:26:31.661Z"
+    },
+    {
+      "id": 5508,
+      "userId": 1011,
+      "pointType": "GENERAL",
+      "amount": 80000,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-16T01:35:36.571Z"
+    },
+    {
+      "id": 5509,
+      "userId": 1011,
+      "pointType": "FLEXI_MEAL",
+      "amount": 45000,
+      "status": "ACTIVE",
+      "expiredAt": "2026-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-16T01:35:36.571Z"
+    },
+    {
+      "id": 5510,
+      "userId": 1012,
+      "pointType": "GENERAL",
+      "amount": 15000,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-16T01:35:36.573Z"
+    },
+    {
+      "id": 5511,
+      "userId": 1012,
+      "pointType": "FLEXI_MEAL",
+      "amount": 45000,
+      "status": "ACTIVE",
+      "expiredAt": "2026-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-16T01:35:36.573Z"
+    },
+    {
+      "id": 5512,
+      "userId": 1013,
+      "pointType": "GENERAL",
+      "amount": 15000,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-16T01:35:36.575Z"
+    },
+    {
+      "id": 5513,
+      "userId": 1013,
+      "pointType": "FLEXI_MEAL",
+      "amount": 800,
+      "status": "ACTIVE",
+      "expiredAt": "2026-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-16T01:35:36.575Z"
+    },
+    {
+      "id": 5514,
+      "userId": 1014,
+      "pointType": "GENERAL",
+      "amount": 5000,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-16T01:35:36.577Z"
+    },
+    {
+      "id": 5515,
+      "userId": 1014,
+      "pointType": "FLEXI_MEAL",
+      "amount": 23000,
+      "status": "ACTIVE",
+      "expiredAt": "2026-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-16T01:35:36.577Z"
+    },
+    {
+      "id": 5516,
+      "userId": 1015,
+      "pointType": "GENERAL",
+      "amount": 85000,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-16T01:35:36.578Z"
+    },
+    {
+      "id": 5517,
+      "userId": 1015,
+      "pointType": "FLEXI_MEAL",
+      "amount": 67000,
+      "status": "ACTIVE",
+      "expiredAt": "2026-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-16T01:35:36.578Z"
+    },
+    {
+      "id": 5518,
+      "userId": 1016,
+      "pointType": "GENERAL",
+      "amount": 0,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-16T01:35:36.579Z"
+    },
+    {
+      "id": 5519,
+      "userId": 1017,
+      "pointType": "GENERAL",
+      "amount": 20000,
+      "status": "ACTIVE",
+      "expiredAt": null,
+      "createdAt": "2026-09-16T01:35:36.580Z"
+    },
+    {
+      "id": 5520,
+      "userId": 1017,
+      "pointType": "FLEXI_MEAL",
+      "amount": 2500,
+      "status": "EXPIRED",
+      "expiredAt": "2025-09-30T23:59:59.000Z",
+      "createdAt": "2026-09-16T01:35:36.581Z"
+    }
+  ],
+  "paymentTransactions": [
+    {
+      "id": 5,
+      "userId": 1014,
+      "itemName": "온라인 강의 30% 할인 쿠폰",
+      "mccCode": null,
+      "generalAmount": 6000,
+      "flexiAmount": 9000,
+      "totalAmount": 15000,
+      "approvalStatus": "APPROVED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T01:35:54.487Z"
+    },
+    {
+      "id": 6,
+      "userId": 1004,
+      "itemName": "T다이렉트샵 이용권",
+      "mccCode": null,
+      "generalAmount": 0,
+      "flexiAmount": 30000,
+      "totalAmount": 30000,
+      "approvalStatus": "BLOCKED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:04:33.766Z"
+    },
+    {
+      "id": 7,
+      "userId": 1004,
+      "itemName": "SK스토아 상품권 5만원권",
+      "mccCode": null,
+      "generalAmount": 50000,
+      "flexiAmount": 0,
+      "totalAmount": 50000,
+      "approvalStatus": "APPROVED",
+      "redemptionStatus": "USED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:11:18.276Z"
+    },
+    {
+      "id": 8,
+      "userId": 1004,
+      "itemName": "SK스토아 상품권 5만원권",
+      "mccCode": null,
+      "generalAmount": 0,
+      "flexiAmount": 50000,
+      "totalAmount": 50000,
+      "approvalStatus": "BLOCKED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:11:23.911Z"
+    },
+    {
+      "id": 10,
+      "userId": 1012,
+      "itemName": "T다이렉트샵 이용권",
+      "mccCode": null,
+      "generalAmount": 15000,
+      "flexiAmount": 15000,
+      "totalAmount": 30000,
+      "approvalStatus": "BLOCKED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:32:34.780Z"
+    },
+    {
+      "id": 14,
+      "userId": 1012,
+      "itemName": "T다이렉트샵 이용권",
+      "mccCode": null,
+      "generalAmount": 15000,
+      "flexiAmount": 15000,
+      "totalAmount": 30000,
+      "approvalStatus": "APPROVED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": "8821-8632-6070-8839",
+      "createdAt": "2026-09-16T02:39:15.612Z"
+    },
+    {
+      "id": 16,
+      "userId": 1012,
+      "itemName": "SK스토아 상품권 5만원권",
+      "mccCode": null,
+      "generalAmount": 0,
+      "flexiAmount": 50000,
+      "totalAmount": 50000,
+      "approvalStatus": "BLOCKED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:51:02.121Z"
+    },
+    {
+      "id": 17,
+      "userId": 1012,
+      "itemName": "SK스토아 상품권 5만원권",
+      "mccCode": null,
+      "generalAmount": 0,
+      "flexiAmount": 50000,
+      "totalAmount": 50000,
+      "approvalStatus": "BLOCKED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:51:05.522Z"
+    },
+    {
+      "id": 18,
+      "userId": 1012,
+      "itemName": "SK스토아 상품권 5만원권",
+      "mccCode": null,
+      "generalAmount": 0,
+      "flexiAmount": 50000,
+      "totalAmount": 50000,
+      "approvalStatus": "BLOCKED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:51:08.398Z"
+    },
+    {
+      "id": 19,
+      "userId": 1012,
+      "itemName": "SK주유소 상품권 3만원권",
+      "mccCode": null,
+      "generalAmount": 0,
+      "flexiAmount": 30000,
+      "totalAmount": 30000,
+      "approvalStatus": "BLOCKED",
+      "redemptionStatus": "UNUSED",
+      "voucherCode": null,
+      "createdAt": "2026-09-16T02:51:13.792Z"
+    },
+    {
+      "id": 20,
+      "userId": 1015,
+      "itemName": "온라인 강의 30% 할인 쿠폰",
+      "mccCode": null,
+      "generalAmount": 15000,
+      "flexiAmount": 0,
+      "totalAmount": 15000,
+      "approvalStatus": "APPROVED",
+      "redemptionStatus": "USED",
+      "voucherCode": "6807-1645-4093-7575",
+      "createdAt": "2026-09-16T04:41:48.080Z"
+    }
+  ],
+  "guardrailLogs": [
+    {
+      "id": 5,
+      "paymentId": 5,
+      "riskScore": 0,
+      "isBlocked": false,
+      "blockReason": "온라인 강의에 대한 할인 쿠폰은 실질적인 소비재/서비스로 허용됩니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T01:35:54.489Z"
+    },
+    {
+      "id": 6,
+      "paymentId": 6,
+      "riskScore": 1,
+      "isBlocked": true,
+      "blockReason": "이용권은 현금과 유사하게 유통 가능하므로 결제를 차단합니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:04:33.769Z"
+    },
+    {
+      "id": 7,
+      "paymentId": 8,
+      "riskScore": 1,
+      "isBlocked": true,
+      "blockReason": "상품권은 현금화 가능한 자산으로 분류되어 결제가 차단됩니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:11:23.913Z"
+    },
+    {
+      "id": 9,
+      "paymentId": 10,
+      "riskScore": 1,
+      "isBlocked": true,
+      "blockReason": "이용권은 현금화 가능한 자산으로 간주되어 차단됩니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:32:34.782Z"
+    },
+    {
+      "id": 13,
+      "paymentId": 14,
+      "riskScore": 0,
+      "isBlocked": false,
+      "blockReason": "특정 매장에서만 사용 가능한 소비 쿠폰이므로 현금화 가능한 자산이 아니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:39:15.614Z"
+    },
+    {
+      "id": 15,
+      "paymentId": 16,
+      "riskScore": 1,
+      "isBlocked": true,
+      "blockReason": "상품권은 현금화 가능한 자산으로 차단됩니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:51:02.128Z"
+    },
+    {
+      "id": 16,
+      "paymentId": 17,
+      "riskScore": 1,
+      "isBlocked": true,
+      "blockReason": "상품권은 현금화 가능한 자산으로 차단됩니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:51:05.525Z"
+    },
+    {
+      "id": 17,
+      "paymentId": 18,
+      "riskScore": 1,
+      "isBlocked": true,
+      "blockReason": "상품권은 범용 구매력을 갖고 있어 현금화 가능한 자산입니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:51:08.401Z"
+    },
+    {
+      "id": 18,
+      "paymentId": 19,
+      "riskScore": 0.9,
+      "isBlocked": true,
+      "blockReason": "주유소 상품권은 현금처럼 사용할 수 있는 범용 구매력을 가진 자산이므로 결제를 차단합니다.",
+      "source": "LLM_TOOL_CALL_OPENAI",
+      "createdAt": "2026-09-16T02:51:13.795Z"
+    }
+  ],
+  "guardrailPolicy": {
+    "blockGiftCards": true,
+    "blockCashEquivalents": true,
+    "riskThreshold": 0.7
+  },
+  "products": [
+    {
+      "id": 7,
+      "name": "SK주유소 상품권 3만원권",
+      "category": "GIFT_CARD",
+      "price": 30000,
+      "isCashLike": true,
+      "sortOrder": 50
+    },
+    {
+      "id": 11,
+      "name": "SK스토아 상품권 5만원권",
+      "category": "GIFT_CARD",
+      "price": 50000,
+      "isCashLike": true,
+      "sortOrder": 50
+    },
+    {
+      "id": 12,
+      "name": "T다이렉트샵 이용권",
+      "category": "GIFT_CARD",
+      "price": 30000,
+      "isCashLike": false,
+      "sortOrder": 50
+    },
+    {
+      "id": 1,
+      "name": "온라인 강의 30% 할인 쿠폰",
+      "category": "LEARNING",
+      "price": 15000,
+      "isCashLike": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 2,
+      "name": "베스트셀러 도서 구매 쿠폰",
+      "category": "BOOK",
+      "price": 20000,
+      "isCashLike": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 3,
+      "name": "재휴 헬스장 1개월 이용권",
+      "category": "FITNESS",
+      "price": 55000,
+      "isCashLike": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 4,
+      "name": "스타벅스 아메리카노 쿠폰",
+      "category": "CAFE",
+      "price": 4500,
+      "isCashLike": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 5,
+      "name": "신세계 모바일 백화점 상품권 5만원권",
+      "category": "GIFT_CARD",
+      "price": 50000,
+      "isCashLike": true,
+      "sortOrder": 100
+    },
+    {
+      "id": 6,
+      "name": "SSG머니 충전 교환권",
+      "category": "GIFT_CARD",
+      "price": 30000,
+      "isCashLike": true,
+      "sortOrder": 100
+    }
+  ],
+  "nextIds": {
+    "paymentTransactions": 21,
+    "guardrailLogs": 19,
+    "users": 1018,
+    "admins": 9003,
+    "mealBalances": 15,
+    "pointLedgers": 5521
+  }
+}
